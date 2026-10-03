@@ -45,20 +45,6 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, [load]);
 
-  const handleLogout = () => {
-    Alert.alert("로그아웃", "로그아웃 하시겠어요?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "로그아웃",
-        style: "destructive",
-        onPress: async () => {
-          await supabase.auth.signOut();
-          router.replace("/login");
-        },
-      },
-    ]);
-  };
-
   const progressPct = totalSets === 0 ? 0 : Math.round((testedSetCount / totalSets) * 100);
 
   if (loading) {
@@ -77,16 +63,14 @@ export default function HomeScreen() {
         end={{ x: 1, y: 1 }}
         style={{ paddingTop: insets.top + 20, paddingBottom: 28 }}
       >
-        <View className="flex-row items-center justify-between px-6">
-          <Text className="text-lg font-extrabold text-white">LEGACY M</Text>
-          <View className="flex-row items-center gap-4">
-            <Pressable onPress={() => Alert.alert("알림", "새 알림이 없습니다.")}>
-              <Ionicons name="notifications-outline" size={22} color="white" />
-            </Pressable>
-            <Pressable onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={22} color="white" />
-            </Pressable>
-          </View>
+        <View className="relative flex-row items-center justify-center px-6">
+          <Text className="text-xl font-extrabold text-white">LEGACY M</Text>
+          <Pressable
+            onPress={() => Alert.alert("알림", "새 알림이 없습니다.")}
+            className="absolute right-6"
+          >
+            <Ionicons name="notifications-outline" size={22} color="white" />
+          </Pressable>
         </View>
       </LinearGradient>
 
