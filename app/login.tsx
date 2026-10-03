@@ -35,7 +35,7 @@ function FormInput({
       </Text>
       <TextInput
         placeholderTextColor="#a1a1aa"
-        className={`rounded-2xl bg-zinc-100 px-4 py-4 text-base text-zinc-900 border-2 ${
+        className={`bg-zinc-100 px-4 py-4 text-base text-zinc-900 border-2 ${
           focused ? "border-brand bg-white" : "border-transparent"
         }`}
         {...props}
@@ -89,7 +89,7 @@ export default function LoginScreen() {
     }
 
     setLoading(false);
-    router.replace("/words");
+    router.replace("/");
   };
 
   return (
@@ -102,7 +102,7 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-        <View className="overflow-hidden rounded-b-[40px]">
+        <View className="overflow-hidden">
           <LinearGradient
             colors={["#f0a8b4", "#e05770"]}
             start={{ x: 0, y: 0 }}
@@ -110,15 +110,15 @@ export default function LoginScreen() {
             style={{ paddingTop: insets.top + 28, paddingBottom: 64 }}
           >
             <View className="items-center">
-              <View className="h-28 w-28 items-center justify-center rounded-3xl bg-white/95 shadow-lg">
+              <View className="h-28 w-28 items-center justify-center bg-white/95 shadow-lg">
                 <Image
                   source={require("../assets/images/logo.webp")}
-                  className="h-20 w-20 rounded-xl"
+                  className="h-20 w-20"
                   resizeMode="contain"
                 />
               </View>
               <Text className="mt-5 text-2xl font-extrabold text-white">
-                Legacy Voca
+                Legacy M
               </Text>
               <Text className="mt-1.5 text-sm font-medium text-white/80">
                 매일 쌓는 단어의 힘
@@ -127,7 +127,7 @@ export default function LoginScreen() {
           </LinearGradient>
         </View>
 
-        <View className="-mt-8 flex-1 rounded-t-[32px] bg-white px-6 pb-10 pt-9 shadow-2xl">
+        <View className="-mt-8 flex-1 bg-white px-6 pb-10 pt-9 shadow-2xl">
           <Text className="text-sm text-zinc-500">
             아이디와 비밀번호로 로그인해주세요
           </Text>
@@ -175,7 +175,7 @@ export default function LoginScreen() {
             </Pressable>
 
             {error && (
-              <View className="rounded-xl bg-red-50 px-4 py-3">
+              <View className="bg-red-50 px-4 py-3">
                 <Text className="text-sm font-semibold text-red-500">
                   {error}
                 </Text>
@@ -188,7 +188,7 @@ export default function LoginScreen() {
               style={({ pressed }) => ({
                 opacity: loading ? 0.7 : pressed ? 0.85 : 1,
               })}
-              className="mt-2 items-center rounded-2xl bg-brand py-4 shadow-md shadow-brand/40"
+              className="mt-2 items-center bg-brand py-4 shadow-md shadow-brand/40"
             >
               {loading ? (
                 <ActivityIndicator color="white" />
