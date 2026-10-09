@@ -49,6 +49,15 @@ export const ROUND_TITLE: Record<number, string> = {
   1: "1회 · 랜덤 테스트",
   2: "2회 · 틀린 단어만",
   3: "3회 · 랜덤 재시험",
+  4: "4회 · 3회 오답만",
+  5: "5회 · 연속 오답만",
+};
+
+// 재시험 회차(틀린 단어만 다시 푸는 회차) 안내 문구.
+export const RETEST_DESCRIPTION: Record<number, string> = {
+  2: "1회에서 틀린 단어만 다시 풀어요",
+  4: "3회에서 틀린 단어만 다시 풀어요",
+  5: "4회에서도 틀린 단어만 다시 풀어요",
 };
 
 async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
@@ -66,7 +75,11 @@ export const startAttempt = (vocabSetId: string) =>
 export const getAttempt = (attemptId: string) =>
   rpc<Attempt>("get_vocab_attempt", { p_attempt_id: attemptId });
 
-export const answerQuestion = (attemptId: string, position: number, selectedIndex: number) =>
+export const answerQuestion = (
+  attemptId: string,
+  position: number,
+  selectedIndex: number,
+) =>
   rpc<AnswerResult>("answer_vocab_question", {
     p_attempt_id: attemptId,
     p_position: position,

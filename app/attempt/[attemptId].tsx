@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
@@ -11,6 +17,7 @@ import {
   friendlyTestError,
   getAttempt,
   getTestStatus,
+  RETEST_DESCRIPTION,
   ROUND_TITLE,
   startAttempt,
   type Attempt,
@@ -18,7 +25,8 @@ import {
 } from "../../lib/test";
 
 const firstUnanswered = (attempt: Attempt) =>
-  attempt.questions.find((question) => question.selected_index === null)?.position ?? null;
+  attempt.questions.find((question) => question.selected_index === null)
+    ?.position ?? null;
 
 function ResultView({ attempt }: { attempt: Attempt }) {
   const [status, setStatus] = useState<TestStatus | null>(null);
@@ -31,7 +39,9 @@ function ResultView({ attempt }: { attempt: Attempt }) {
       .catch((e) => setError(friendlyTestError(e)));
   }, [attempt.vocab_set_id]);
 
-  const wrongQuestions = attempt.questions.filter((question) => question.is_correct === false);
+  const wrongQuestions = attempt.questions.filter(
+    (question) => question.is_correct === false,
+  );
   const nextRound = status?.next_round ?? null;
 
   const startNext = async () => {
@@ -54,8 +64,12 @@ function ResultView({ attempt }: { attempt: Attempt }) {
         end={{ x: 1, y: 1 }}
         style={{ borderRadius: 28, paddingHorizontal: 22, paddingVertical: 24 }}
       >
-        <Text className="text-xs font-bold text-cream">{ROUND_TITLE[attempt.round_no]}</Text>
-        <Text className="mt-1 text-5xl font-extrabold text-white">{attempt.score}점</Text>
+        <Text className="text-xs font-bold text-cream">
+          {ROUND_TITLE[attempt.round_no]}
+        </Text>
+        <Text className="mt-1 text-5xl font-extrabold text-white">
+          {attempt.score}점
+        </Text>
         <Text className="mt-2 text-sm text-white/90">
           {attempt.total_count}문제 중 {attempt.correct_count}개 정답 · 오답{" "}
           {wrongQuestions.length}개
@@ -82,12 +96,18 @@ function ResultView({ attempt }: { attempt: Attempt }) {
               key={question.position}
               className="rounded-2xl border border-line bg-white px-4 py-3"
             >
-              <Text className="text-base font-bold text-ink">{question.word}</Text>
+              <Text className="text-base font-bold text-ink">
+                {question.word}
+              </Text>
               <Text className="mt-1 text-sm text-emerald-700">
-                {question.correct_index !== null ? question.choices[question.correct_index] : ""}
+                {question.correct_index !== null
+                  ? question.choices[question.correct_index]
+                  : ""}
               </Text>
               {question.example && (
-                <Text className="mt-1 text-xs text-ink-soft">{question.example}</Text>
+                <Text className="mt-1 text-xs text-ink-soft">
+                  {question.example}
+                </Text>
               )}
             </View>
           ))}
@@ -105,14 +125,18 @@ function ResultView({ attempt }: { attempt: Attempt }) {
           <Pressable
             onPress={startNext}
             disabled={starting}
-            style={({ pressed }) => ({ opacity: pressed || starting ? 0.8 : 1 })}
+            style={({ pressed }) => ({
+              opacity: pressed || starting ? 0.8 : 1,
+            })}
             className="items-center rounded-2xl bg-brand py-4 shadow-md shadow-brand/40"
           >
             {starting ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
               <Text className="text-base font-bold text-white">
-                {nextRound === 2 ? "틀린 단어 다시 풀기 (2회)" : `${nextRound}회 시작`}
+                {RETEST_DESCRIPTION[nextRound]
+                  ? `틀린 단어 다시 풀기 (${nextRound}회)`
+                  : `${nextRound}회 시작`}
               </Text>
             )}
           </Pressable>
@@ -164,8 +188,10 @@ export default function AttemptScreen() {
     load().finally(() => setLoading(false));
   }, [load]);
 
-  const question = attempt?.questions.find((item) => item.position === position) ?? null;
-  const answered = question?.selected_index !== null && question?.selected_index !== undefined;
+  const question =
+    attempt?.questions.find((item) => item.position === position) ?? null;
+  const answered =
+    question?.selected_index !== null && question?.selected_index !== undefined;
 
   const onChoose = async (index: number) => {
     if (!attempt || !question || answered || submitting) return;
@@ -202,7 +228,8 @@ export default function AttemptScreen() {
           attempt && !showResult ? (
             <View className="rounded-full bg-white/25 px-2.5 py-1">
               <Text className="text-xs font-bold text-white">
-                {question?.position ?? attempt.total_count} / {attempt.total_count}
+                {question?.position ?? attempt.total_count} /{" "}
+                {attempt.total_count}
               </Text>
             </View>
           ) : undefined
@@ -237,7 +264,9 @@ export default function AttemptScreen() {
 
             <View className="items-center rounded-3xl border border-line bg-white px-4 py-10 shadow-sm shadow-brand/20">
               <View className="rounded-full bg-cream px-3 py-1">
-                <Text className="text-xs font-bold text-berry">이 단어의 뜻은?</Text>
+                <Text className="text-xs font-bold text-berry">
+                  이 단어의 뜻은?
+                </Text>
               </View>
               <Text className="mt-4 text-center text-3xl font-extrabold text-ink">
                 {question.word}
@@ -260,13 +289,17 @@ export default function AttemptScreen() {
             {answered && question.example && (
               <View className="rounded-2xl bg-cream/40 px-4 py-3">
                 <Text className="text-xs font-bold text-berry">예시 문장</Text>
-                <Text className="mt-1 text-sm text-ink">{question.example}</Text>
+                <Text className="mt-1 text-sm text-ink">
+                  {question.example}
+                </Text>
               </View>
             )}
 
             {error && (
               <View className="rounded-xl bg-red-50 px-4 py-3">
-                <Text className="text-sm font-semibold text-red-500">{error}</Text>
+                <Text className="text-sm font-semibold text-red-500">
+                  {error}
+                </Text>
               </View>
             )}
 

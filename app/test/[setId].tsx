@@ -1,5 +1,12 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
@@ -8,6 +15,7 @@ import ScreenHeader from "../../components/ScreenHeader";
 import {
   friendlyTestError,
   getTestStatus,
+  RETEST_DESCRIPTION,
   ROUND_TITLE,
   startAttempt,
   type TestRound,
@@ -41,13 +49,15 @@ function RoundCard({
   return (
     <View className="flex-row items-center justify-between rounded-3xl border border-line bg-white px-5 py-4 shadow-sm shadow-brand/20">
       <View className="flex-1 pr-3">
-        <Text className="text-base font-bold text-ink">{ROUND_TITLE[roundNo]}</Text>
+        <Text className="text-base font-bold text-ink">
+          {ROUND_TITLE[roundNo]}
+        </Text>
         <Text className="mt-1 text-xs text-ink-soft">
           {round
             ? `${round.correct_count ?? 0} / ${round.total_count} 정답`
             : skipped
               ? "틀린 단어가 없어 건너뛰었어요"
-              : "아직 시작하지 않았어요"}
+              : (RETEST_DESCRIPTION[roundNo] ?? "아직 시작하지 않았어요")}
         </Text>
       </View>
       <View className={`rounded-full px-3 py-1 ${badgeBg}`}>
@@ -78,7 +88,11 @@ export default function TestOverviewScreen() {
 
     try {
       const [{ data: set }, nextStatus] = await Promise.all([
-        supabase.from("vocab_sets").select("title").eq("id", setId).maybeSingle(),
+        supabase
+          .from("vocab_sets")
+          .select("title")
+          .eq("id", setId)
+          .maybeSingle(),
         getTestStatus(setId),
       ]);
       setTitle(set?.title ?? "");
@@ -101,10 +115,13 @@ export default function TestOverviewScreen() {
     setRefreshing(false);
   }, [load]);
 
-  const inProgress = status?.rounds.find((round) => round.status === "in_progress");
+  const inProgress = status?.rounds.find(
+    (round) => round.status === "in_progress",
+  );
   const round1 = status?.rounds.find((round) => round.round_no === 1);
   const round2 = status?.rounds.find((round) => round.round_no === 2);
-  const round2Skipped = round1?.status === "completed" && !round2 && status?.next_round === 3;
+  const round2Skipped =
+    round1?.status === "completed" && !round2 && status?.next_round === 3;
   const allDone = status !== null && !inProgress && status.next_round === null;
 
   const onPrimary = async () => {
@@ -130,7 +147,9 @@ export default function TestOverviewScreen() {
     : status?.next_round
       ? status.rounds.length === 0
         ? "테스트 시작"
-        : `${status.next_round}회 시작`
+        : RETEST_DESCRIPTION[status.next_round]
+          ? `틀린 단어 다시 풀기 (${status.next_round}회)`
+          : `${status.next_round}회 시작`
       : "";
 
   return (
@@ -145,11 +164,17 @@ export default function TestOverviewScreen() {
         <ScrollView
           contentContainerClassName="px-6 py-6 gap-6"
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.brand}
+            />
           }
         >
           <View>
-            <Text className="text-xl font-extrabold text-ink">{title || "단어장"}</Text>
+            <Text className="text-xl font-extrabold text-ink">
+              {title || "단어장"}
+            </Text>
             <Text className="mt-1 text-xs text-ink-soft">
               4지선다 · 답을 고르면 바로 확정되고 수정할 수 없어요
             </Text>
@@ -157,49 +182,76 @@ export default function TestOverviewScreen() {
 
           {error && (
             <View className="rounded-xl bg-red-50 px-4 py-3">
-              <Text className="text-sm font-semibold text-red-500">{error}</Text>
+              <Text className="text-sm font-semibold text-red-500">
+                {error}
+              </Text>
             </View>
           )}
 
           {status && (
             <>
               <View className="gap-3">
-                {[1, 2, 3].map((roundNo) => (
-                  <RoundCard
-                    key={roundNo}
-                    roundNo={roundNo}
-                    round={status.rounds.find((round) => round.round_no === roundNo)}
-                    skipped={roundNo === 2 && round2Skipped}
-                  />
-                ))}
+                {/* 1~3회는 항상 보이고, 4·5회는 진행됐거나 다음 차례일 때만 보인다. */}
+                {[1, 2, 3, 4, 5]
+                  .filter(
+                    (roundNo) =>
+                      roundNo <= 3 ||
+                      status.rounds.some(
+                        (round) => round.round_no === roundNo,
+                      ) ||
+                      status.next_round === roundNo,
+                  )
+                  .map((roundNo) => (
+                    <RoundCard
+                      key={roundNo}
+                      roundNo={roundNo}
+                      round={status.rounds.find(
+                        (round) => round.round_no === roundNo,
+                      )}
+                      skipped={roundNo === 2 && round2Skipped}
+                    />
+                  ))}
               </View>
 
-              {allDone ? (
+              {status.total_score !== null && (
                 <LinearGradient
                   colors={brandGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={{ borderRadius: 28, paddingHorizontal: 22, paddingVertical: 22 }}
+                  style={{
+                    borderRadius: 28,
+                    paddingHorizontal: 22,
+                    paddingVertical: 22,
+                  }}
                 >
-                  <Text className="text-xs font-bold text-cream">테스트 완료</Text>
+                  <Text className="text-xs font-bold text-cream">
+                    {allDone ? "테스트 완료" : "종합 점수"}
+                  </Text>
                   <Text className="mt-1 text-3xl font-extrabold text-white">
                     종합 {status.total_score}점
                   </Text>
                   <Text className="mt-2 text-xs text-white/80">
-                    1회 {status.first_score}점 × 40% + 최종 {status.final_score}점 × 60%
+                    1회 {status.first_score}점 × 40% + 최종 {status.final_score}
+                    점 × 60%
                   </Text>
                 </LinearGradient>
-              ) : (
+              )}
+
+              {!allDone && (
                 <Pressable
                   onPress={onPrimary}
                   disabled={starting}
-                  style={({ pressed }) => ({ opacity: pressed || starting ? 0.8 : 1 })}
+                  style={({ pressed }) => ({
+                    opacity: pressed || starting ? 0.8 : 1,
+                  })}
                   className="items-center rounded-2xl bg-brand py-4 shadow-md shadow-brand/40"
                 >
                   {starting ? (
                     <ActivityIndicator color="#ffffff" />
                   ) : (
-                    <Text className="text-base font-bold text-white">{primaryLabel}</Text>
+                    <Text className="text-base font-bold text-white">
+                      {primaryLabel}
+                    </Text>
                   )}
                 </Pressable>
               )}
