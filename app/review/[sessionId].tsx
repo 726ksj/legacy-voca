@@ -2,46 +2,79 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { brandGradient, colors } from "../../lib/theme";
+import {
+  answerReviewQuestion,
+  friendlyReviewError,
+  getReviewSession,
+  GRADUATION_STEPS,
+  startReviewSession,
+  type ReviewQuestion,
+  type ReviewSession,
+} from "../../lib/wrongNotes";
 import ChoiceButton from "../../components/ChoiceButton";
 import ScreenHeader from "../../components/ScreenHeader";
-import {
-  answerQuestion,
-  friendlyTestError,
-  getAttempt,
-  getTestStatus,
-  ROUND_TITLE,
-  startAttempt,
-  type Attempt,
-  type TestStatus,
-} from "../../lib/test";
 
-const firstUnanswered = (attempt: Attempt) =>
-  attempt.questions.find((question) => question.selected_index === null)?.position ?? null;
+const firstUnanswered = (session: ReviewSession) =>
+  session.questions.find((question) => question.selected_index === null)?.position ?? null;
 
-function ResultView({ attempt }: { attempt: Attempt }) {
-  const [status, setStatus] = useState<TestStatus | null>(null);
+// 문제를 풀기 전: 마스터까지 남은 횟수 / 푼 뒤: 마스터, 마스터 칸 변화 안내.
+function ProgressHint({ question }: { question: ReviewQuestion }) {
+  const answered = question.selected_index !== null;
+  const remaining = GRADUATION_STEPS - question.streak;
+
+  if (!answered) {
+    return (
+      <View className="rounded-full bg-cream px-3 py-1">
+        <Text className="text-xs font-bold text-berry">
+          마스터까지 {remaining}번 남았어요
+        </Text>
+      </View>
+    );
+  }
+  if (question.graduated) {
+    return (
+      <View className="flex-row items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1">
+        <Ionicons name="school" size={14} color="#059669" />
+        <Text className="text-xs font-bold text-emerald-600">마스터했어요!</Text>
+      </View>
+    );
+  }
+  if (question.is_correct) {
+    return (
+      <View className="rounded-full bg-cream px-3 py-1">
+        <Text className="text-xs font-bold text-berry">
+          마스터까지 {remaining}번 남았어요 (내일 다시 맞히면 돼요)
+        </Text>
+      </View>
+    );
+  }
+  return (
+    <View className="rounded-full bg-red-50 px-3 py-1">
+      <Text className="text-xs font-bold text-red-500">마스터 칸이 처음부터 다시 시작돼요</Text>
+    </View>
+  );
+}
+
+function ResultView({ session }: { session: ReviewSession }) {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    getTestStatus(attempt.vocab_set_id)
-      .then(setStatus)
-      .catch((e) => setError(friendlyTestError(e)));
-  }, [attempt.vocab_set_id]);
+  const graduatedCount = session.questions.filter((q) => q.graduated).length;
+  const oneMoreCount = session.questions.filter((q) => q.is_correct && !q.graduated).length;
+  const wrongQuestions = session.questions.filter((q) => q.is_correct === false);
+  const remainingAfter = session.remaining_after ?? 0;
 
-  const wrongQuestions = attempt.questions.filter((question) => question.is_correct === false);
-  const nextRound = status?.next_round ?? null;
-
-  const startNext = async () => {
+  const continueReview = async () => {
     setStarting(true);
     setError(null);
     try {
-      const nextAttemptId = await startAttempt(attempt.vocab_set_id);
-      router.replace(`/attempt/${nextAttemptId}`);
+      const nextId = await startReviewSession(session.week);
+      router.replace(`/review/${nextId}`);
     } catch (e) {
-      setError(friendlyTestError(e));
+      setError(friendlyReviewError(e));
       setStarting(false);
     }
   };
@@ -54,34 +87,35 @@ function ResultView({ attempt }: { attempt: Attempt }) {
         end={{ x: 1, y: 1 }}
         style={{ borderRadius: 28, paddingHorizontal: 22, paddingVertical: 24 }}
       >
-        <Text className="text-xs font-bold text-cream">{ROUND_TITLE[attempt.round_no]}</Text>
-        <Text className="mt-1 text-5xl font-extrabold text-white">{attempt.score}점</Text>
+        <Text className="text-xs font-bold text-cream">오답 다시 풀기 결과</Text>
+        <Text className="mt-1 text-4xl font-extrabold text-white">
+          {session.correct_count} / {session.total_count} 정답
+        </Text>
         <Text className="mt-2 text-sm text-white/90">
-          {attempt.total_count}문제 중 {attempt.correct_count}개 정답 · 오답{" "}
-          {wrongQuestions.length}개
+          남은 오답 {session.remaining_before} → {remainingAfter}
         </Text>
       </LinearGradient>
 
-      {status?.total_score !== null && status?.total_score !== undefined && (
-        <View className="rounded-3xl border border-line bg-cream/40 px-5 py-4">
-          <Text className="text-xs font-bold text-berry">최종 결과</Text>
-          <Text className="mt-1 text-2xl font-extrabold text-ink">
-            종합 {status.total_score}점
-          </Text>
-          <Text className="mt-1 text-xs text-ink-soft">
-            1회 {status.first_score}점 × 40% + 최종 {status.final_score}점 × 60%
-          </Text>
+      <View className="flex-row gap-3">
+        <View className="flex-1 items-center rounded-2xl border border-line bg-white py-4">
+          <Text className="text-2xl font-extrabold text-emerald-600">{graduatedCount}</Text>
+          <Text className="mt-1 text-xs text-ink-soft">마스터</Text>
         </View>
-      )}
+        <View className="flex-1 items-center rounded-2xl border border-line bg-white py-4">
+          <Text className="text-2xl font-extrabold text-berry">{oneMoreCount}</Text>
+          <Text className="mt-1 text-xs text-ink-soft">한 번 더</Text>
+        </View>
+        <View className="flex-1 items-center rounded-2xl border border-line bg-white py-4">
+          <Text className="text-2xl font-extrabold text-red-500">{wrongQuestions.length}</Text>
+          <Text className="mt-1 text-xs text-ink-soft">또 틀림</Text>
+        </View>
+      </View>
 
       {wrongQuestions.length > 0 && (
         <View className="gap-3">
-          <Text className="text-sm font-bold text-ink-soft">틀린 단어</Text>
+          <Text className="text-sm font-bold text-ink-soft">또 틀린 단어</Text>
           {wrongQuestions.map((question) => (
-            <View
-              key={question.position}
-              className="rounded-2xl border border-line bg-white px-4 py-3"
-            >
+            <View key={question.position} className="rounded-2xl border border-line bg-white px-4 py-3">
               <Text className="text-base font-bold text-ink">{question.word}</Text>
               <Text className="mt-1 text-sm text-emerald-700">
                 {question.correct_index !== null ? question.choices[question.correct_index] : ""}
@@ -101,9 +135,9 @@ function ResultView({ attempt }: { attempt: Attempt }) {
       )}
 
       <View className="gap-3">
-        {nextRound !== null && (
+        {remainingAfter > 0 && (
           <Pressable
-            onPress={startNext}
+            onPress={continueReview}
             disabled={starting}
             style={({ pressed }) => ({ opacity: pressed || starting ? 0.8 : 1 })}
             className="items-center rounded-2xl bg-brand py-4 shadow-md shadow-brand/40"
@@ -111,28 +145,24 @@ function ResultView({ attempt }: { attempt: Attempt }) {
             {starting ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text className="text-base font-bold text-white">
-                {nextRound === 2 ? "틀린 단어 다시 풀기 (2회)" : `${nextRound}회 시작`}
-              </Text>
+              <Text className="text-base font-bold text-white">남은 오답 이어서 풀기</Text>
             )}
           </Pressable>
         )}
         <Pressable
-          onPress={() => router.replace(`/test/${attempt.vocab_set_id}`)}
+          onPress={() => router.replace("/wrong")}
           className="items-center rounded-2xl border border-line bg-white py-4"
         >
-          <Text className="text-base font-bold text-ink-soft">
-            {nextRound === null ? "완료" : "나중에 하기"}
-          </Text>
+          <Text className="text-base font-bold text-ink-soft">오답노트로 돌아가기</Text>
         </Pressable>
       </View>
     </ScrollView>
   );
 }
 
-export default function AttemptScreen() {
-  const { attemptId } = useLocalSearchParams<{ attemptId: string }>();
-  const [attempt, setAttempt] = useState<Attempt | null>(null);
+export default function ReviewScreen() {
+  const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
+  const [session, setSession] = useState<ReviewSession | null>(null);
   const [position, setPosition] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -142,67 +172,64 @@ export default function AttemptScreen() {
   const load = useCallback(async () => {
     setError(null);
     const {
-      data: { session },
+      data: { session: authSession },
     } = await supabase.auth.getSession();
-    if (!session) {
+    if (!authSession) {
       router.replace("/login");
       return;
     }
 
     try {
-      const loaded = await getAttempt(attemptId);
-      setAttempt(loaded);
-      const next = firstUnanswered(loaded);
-      setPosition(next);
+      const loaded = await getReviewSession(sessionId);
+      setSession(loaded);
+      setPosition(firstUnanswered(loaded));
       setShowResult(loaded.status === "completed");
     } catch (e) {
-      setError(friendlyTestError(e));
+      setError(friendlyReviewError(e));
     }
-  }, [attemptId]);
+  }, [sessionId]);
 
   useEffect(() => {
     load().finally(() => setLoading(false));
   }, [load]);
 
-  const question = attempt?.questions.find((item) => item.position === position) ?? null;
+  const question = session?.questions.find((item) => item.position === position) ?? null;
   const answered = question?.selected_index !== null && question?.selected_index !== undefined;
 
   const onChoose = async (index: number) => {
-    if (!attempt || !question || answered || submitting) return;
+    if (!session || !question || answered || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
-      await answerQuestion(attempt.id, question.position, index);
-      // 서버가 확정한 정답/예시 문장을 다시 받아 화면에 반영한다.
-      setAttempt(await getAttempt(attempt.id));
+      await answerReviewQuestion(session.id, question.position, index);
+      // 서버가 확정한 정답/예시 문장/마스터 상태를 다시 받아 화면에 반영한다.
+      setSession(await getReviewSession(session.id));
     } catch (e) {
-      setError(friendlyTestError(e));
+      setError(friendlyReviewError(e));
     } finally {
       setSubmitting(false);
     }
   };
 
   const onNext = () => {
-    if (!attempt) return;
-    if (attempt.status === "completed") {
+    if (!session) return;
+    if (session.status === "completed") {
       setShowResult(true);
       return;
     }
-    setPosition(firstUnanswered(attempt));
+    setPosition(firstUnanswered(session));
   };
-
-  const title = attempt ? ROUND_TITLE[attempt.round_no] : "단어 테스트";
 
   return (
     <View className="flex-1 bg-blush">
       <ScreenHeader
-        title={title}
+        title="오답 다시 풀기"
         back
         right={
-          attempt && !showResult ? (
+          session && !showResult ? (
             <View className="rounded-full bg-white/25 px-2.5 py-1">
               <Text className="text-xs font-bold text-white">
-                {question?.position ?? attempt.total_count} / {attempt.total_count}
+                {question?.position ?? session.total_count} / {session.total_count}
               </Text>
             </View>
           ) : undefined
@@ -213,33 +240,27 @@ export default function AttemptScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.brand} />
         </View>
-      ) : !attempt ? (
+      ) : !session ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-center text-sm font-semibold text-red-500">
-            {error ?? "테스트를 불러오지 못했어요."}
+            {error ?? "오답 풀이를 불러오지 못했어요."}
           </Text>
         </View>
       ) : showResult ? (
-        <ResultView attempt={attempt} />
+        <ResultView session={session} />
       ) : (
         question && (
           <ScrollView contentContainerClassName="px-6 py-6 gap-6">
-            <View>
-              <View className="h-2 rounded-full bg-white">
-                <View
-                  className="h-2 rounded-full bg-brand"
-                  style={{
-                    width: `${(question.position / attempt.total_count) * 100}%`,
-                  }}
-                />
-              </View>
+            <View className="h-2 rounded-full bg-white">
+              <View
+                className="h-2 rounded-full bg-brand"
+                style={{ width: `${(question.position / session.total_count) * 100}%` }}
+              />
             </View>
 
             <View className="items-center rounded-3xl border border-line bg-white px-4 py-10 shadow-sm shadow-brand/20">
-              <View className="rounded-full bg-cream px-3 py-1">
-                <Text className="text-xs font-bold text-berry">이 단어의 뜻은?</Text>
-              </View>
-              <Text className="mt-4 text-center text-3xl font-extrabold text-ink">
+              <ProgressHint question={question} />
+              <Text className="mt-5 text-center text-3xl font-extrabold text-ink">
                 {question.word}
               </Text>
             </View>
@@ -277,7 +298,7 @@ export default function AttemptScreen() {
               className="items-center rounded-2xl bg-brand py-4 shadow-md shadow-brand/40"
             >
               <Text className="text-base font-bold text-white">
-                {attempt.status === "completed" ? "결과 보기" : "다음 문제"}
+                {session.status === "completed" ? "결과 보기" : "다음 문제"}
               </Text>
             </Pressable>
           </ScrollView>
