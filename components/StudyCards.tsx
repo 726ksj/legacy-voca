@@ -74,15 +74,33 @@ export function VocabStudyCard({ totalSets, testedSetCount }: VocabCardProps) {
   );
 }
 
+export function WritingStudyCard() {
+  const colors = CARD_COLORS.sentence;
+  return (
+    <Pressable
+      onPress={() => router.push("/writing")}
+      style={({ pressed }) => ({
+        backgroundColor: colors.bg,
+        opacity: pressed ? 0.85 : 1,
+      })}
+      className="rounded-3xl border border-line px-5 py-5 shadow-sm shadow-brand/20"
+    >
+      <View className="flex-row items-center justify-between">
+        <Text className="text-base font-bold" style={{ color: colors.fg }}>
+          문장 학습
+        </Text>
+        <Ionicons name="chevron-forward" size={16} color={colors.fg} />
+      </View>
+      <Text className="mt-1 text-xs text-ink-soft">문장을 암기하고 배열해요</Text>
+    </Pressable>
+  );
+}
+
 export function StudyCardList({ totalSets, testedSetCount }: VocabCardProps) {
   return (
     <View className="gap-3">
       <VocabStudyCard totalSets={totalSets} testedSetCount={testedSetCount} />
-      <ComingSoonCard
-        title="문장 학습"
-        subtitle="문장을 암기하고 배열해요"
-        colors={CARD_COLORS.sentence}
-      />
+      <WritingStudyCard />
       <ComingSoonCard
         title="순서 배열"
         subtitle="지문과 문장의 순서를 맞춰요"
