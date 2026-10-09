@@ -3,8 +3,11 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
+import { colors } from "../../lib/theme";
+import { useStatusBar } from "../../lib/useStatusBar";
 
 export default function SettingsScreen() {
+  useStatusBar("dark");
   const insets = useSafeAreaInsets();
   const [name, setName] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
@@ -49,26 +52,26 @@ export default function SettingsScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#e98998" />
+      <View className="flex-1 items-center justify-center bg-blush">
+        <ActivityIndicator color={colors.brand} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-blush" style={{ paddingTop: insets.top }}>
       <View className="px-6 pt-2">
-        <Text className="text-2xl font-extrabold text-zinc-900">설정</Text>
+        <Text className="text-2xl font-extrabold text-ink">설정</Text>
 
-        <View className="mt-6 border border-zinc-100 bg-zinc-50 px-5 py-5">
-          <Text className="text-base font-bold text-zinc-900">{name ?? "회원"}</Text>
-          {username && <Text className="mt-1 text-sm text-zinc-500">@{username}</Text>}
+        <View className="mt-6 rounded-3xl border border-line bg-white px-5 py-5 shadow-sm shadow-brand/20">
+          <Text className="text-base font-bold text-ink">{name ?? "회원"}</Text>
+          {username && <Text className="mt-1 text-sm text-ink-soft">@{username}</Text>}
         </View>
 
         <Pressable
           onPress={handleLogout}
           style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-          className="mt-8 items-center border border-zinc-200 py-4"
+          className="mt-8 items-center rounded-2xl border border-line bg-white py-4"
         >
           <Text className="text-sm font-bold text-red-500">로그아웃</Text>
         </Pressable>

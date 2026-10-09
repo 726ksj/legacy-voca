@@ -5,8 +5,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { fetchVocabOverview } from "../../lib/vocab";
 import { StudyCardList } from "../../components/StudyCards";
+import { colors } from "../../lib/theme";
+import { useStatusBar } from "../../lib/useStatusBar";
 
 export default function StudyScreen() {
+  useStatusBar("dark");
   const insets = useSafeAreaInsets();
   const [totalSets, setTotalSets] = useState(0);
   const [testedSetCount, setTestedSetCount] = useState(0);
@@ -39,22 +42,22 @@ export default function StudyScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#e98998" />
+      <View className="flex-1 items-center justify-center bg-blush">
+        <ActivityIndicator color={colors.brand} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-blush" style={{ paddingTop: insets.top }}>
       <ScrollView
         contentContainerClassName="px-6 pb-10"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#e98998" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
         }
       >
-        <Text className="mt-2 text-2xl font-extrabold text-zinc-900">학습</Text>
-        <Text className="mt-1 text-sm text-zinc-500">원하는 학습 유형을 선택하세요</Text>
+        <Text className="mt-2 text-2xl font-extrabold text-ink">학습</Text>
+        <Text className="mt-1 text-sm text-ink-soft">원하는 학습 유형을 선택하세요</Text>
 
         <View className="mt-6">
           <StudyCardList totalSets={totalSets} testedSetCount={testedSetCount} />

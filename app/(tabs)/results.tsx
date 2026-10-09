@@ -3,6 +3,8 @@ import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from "react
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
+import { colors } from "../../lib/theme";
+import { useStatusBar } from "../../lib/useStatusBar";
 
 interface TestResult {
   id: string;
@@ -21,6 +23,7 @@ function formatDate(iso: string) {
 }
 
 export default function ResultsScreen() {
+  useStatusBar("dark");
   const insets = useSafeAreaInsets();
   const [results, setResults] = useState<TestResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,39 +59,44 @@ export default function ResultsScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#e98998" />
+      <View className="flex-1 items-center justify-center bg-blush">
+        <ActivityIndicator color={colors.brand} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-blush" style={{ paddingTop: insets.top }}>
       <ScrollView
         contentContainerClassName="px-6 pb-10"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#e98998" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
         }
       >
-        <Text className="mt-2 text-2xl font-extrabold text-zinc-900">학습 결과</Text>
-        <Text className="mt-1 text-sm text-zinc-500">단어 테스트 기록이에요</Text>
+        <Text className="mt-2 text-2xl font-extrabold text-ink">학습 결과</Text>
+        <Text className="mt-1 text-sm text-ink-soft">단어 테스트 기록이에요</Text>
 
         <View className="mt-6 gap-3">
           {results.length === 0 && (
             <View className="items-center py-20">
-              <Text className="text-sm text-zinc-400">아직 테스트 기록이 없어요</Text>
+              <Text className="text-sm text-ink-soft">아직 테스트 기록이 없어요</Text>
             </View>
           )}
 
           {results.map((r) => (
-            <View key={r.id} className="border border-zinc-100 bg-white px-4 py-4 shadow-sm">
+            <View
+              key={r.id}
+              className="rounded-3xl border border-line bg-white px-5 py-4 shadow-sm shadow-brand/20"
+            >
               <View className="flex-row items-center justify-between">
-                <Text className="flex-1 text-base font-bold text-zinc-900">
+                <Text className="flex-1 text-base font-bold text-ink">
                   {r.vocab_sets?.title ?? "단어 테스트"}
                 </Text>
-                <Text className="text-sm font-extrabold text-brand-dark">{r.score}점</Text>
+                <View className="rounded-full bg-cream px-3 py-1">
+                  <Text className="text-sm font-extrabold text-berry">{r.score}점</Text>
+                </View>
               </View>
-              <Text className="mt-1 text-xs text-zinc-500">
+              <Text className="mt-1 text-xs text-ink-soft">
                 {r.correct_count}/{r.total_count}개 정답 · {formatDate(r.tested_at)}
               </Text>
             </View>

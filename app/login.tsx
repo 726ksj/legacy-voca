@@ -16,6 +16,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
+import { brandGradient, colors } from "../lib/theme";
+import { useStatusBar } from "../lib/useStatusBar";
 
 const EMAIL_DOMAIN = "legacyedu.local";
 const SAVED_USERNAME_KEY = "legacy-voca:saved-username";
@@ -30,12 +32,12 @@ function FormInput({
 }) {
   return (
     <View className="gap-2">
-      <Text className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+      <Text className="text-xs font-bold uppercase tracking-wider text-ink-soft">
         {label}
       </Text>
       <TextInput
-        placeholderTextColor="#a1a1aa"
-        className={`bg-zinc-100 px-4 py-4 text-base text-zinc-900 border-2 ${
+        placeholderTextColor={colors.inkMuted}
+        className={`rounded-2xl bg-blush px-4 py-4 text-base text-ink border-2 ${
           focused ? "border-brand bg-white" : "border-transparent"
         }`}
         {...props}
@@ -45,6 +47,7 @@ function FormInput({
 }
 
 export default function LoginScreen() {
+  useStatusBar("light");
   const insets = useSafeAreaInsets();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -95,40 +98,43 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-white"
+      className="flex-1 bg-blush"
     >
       <ScrollView
         contentContainerClassName="flex-grow"
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-        <View className="overflow-hidden">
-          <LinearGradient
-            colors={["#f0a8b4", "#e05770"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ paddingTop: insets.top + 28, paddingBottom: 64 }}
-          >
-            <View className="items-center">
-              <View className="h-28 w-28 items-center justify-center bg-white/95 shadow-lg">
-                <Image
-                  source={require("../assets/images/logo.webp")}
-                  className="h-20 w-20"
-                  resizeMode="contain"
-                />
-              </View>
-              <Text className="mt-5 text-2xl font-extrabold text-white">
-                Legacy M
-              </Text>
-              <Text className="mt-1.5 text-sm font-medium text-white/80">
-                매일 쌓는 단어의 힘
-              </Text>
+        <LinearGradient
+          colors={brandGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            paddingTop: insets.top + 28,
+            paddingBottom: 72,
+            borderBottomLeftRadius: 40,
+            borderBottomRightRadius: 40,
+          }}
+        >
+          <View className="items-center">
+            <View className="rounded-[34px] bg-white p-1.5 shadow-lg shadow-black/20">
+              <Image
+                source={require("../assets/images/logo-icon.png")}
+                style={{ width: 104, height: 104 }}
+                resizeMode="contain"
+              />
             </View>
-          </LinearGradient>
-        </View>
+            <Text className="mt-5 text-2xl font-extrabold tracking-wide text-white">
+              LEGACY M
+            </Text>
+            <Text className="mt-1.5 text-sm font-medium text-cream">
+              머릿속에 남는 기억
+            </Text>
+          </View>
+        </LinearGradient>
 
-        <View className="-mt-8 flex-1 bg-white px-6 pb-10 pt-9 shadow-2xl">
-          <Text className="text-sm text-zinc-500">
+        <View className="-mt-9 mx-5 rounded-3xl border border-line bg-white px-6 pb-8 pt-8 shadow-lg shadow-brand/20">
+          <Text className="text-sm text-ink-soft">
             아이디와 비밀번호로 로그인해주세요
           </Text>
 
@@ -164,18 +170,18 @@ export default function LoginScreen() {
               onPress={() => setRememberId((v) => !v)}
               className="flex-row items-center justify-between py-1"
             >
-              <Text className="text-sm font-medium text-zinc-600">
+              <Text className="text-sm font-medium text-ink">
                 아이디 저장
               </Text>
               <Switch
                 value={rememberId}
                 onValueChange={setRememberId}
-                trackColor={{ true: "#e98998" }}
+                trackColor={{ true: colors.brand }}
               />
             </Pressable>
 
             {error && (
-              <View className="bg-red-50 px-4 py-3">
+              <View className="rounded-xl bg-red-50 px-4 py-3">
                 <Text className="text-sm font-semibold text-red-500">
                   {error}
                 </Text>
@@ -188,7 +194,7 @@ export default function LoginScreen() {
               style={({ pressed }) => ({
                 opacity: loading ? 0.7 : pressed ? 0.85 : 1,
               })}
-              className="mt-2 items-center bg-brand py-4 shadow-md shadow-brand/40"
+              className="mt-2 items-center rounded-2xl bg-brand py-4 shadow-md shadow-brand/40"
             >
               {loading ? (
                 <ActivityIndicator color="white" />

@@ -2,11 +2,12 @@ import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
+// 학습 유형별 색. 단어 학습은 로고의 크림색을, 나머지는 같은 톤의 파스텔을 쓴다.
 const CARD_COLORS = {
-  vocab: { bg: "#e9f7f1", fg: "#1f8a5f" },
-  sentence: { bg: "#fbeaf0", fg: "#c23d64" },
-  order: { bg: "#eaf1fb", fg: "#2f5fa8" },
-  grammar: { bg: "#f1eafb", fg: "#6c3fa8" },
+  vocab: { bg: "#ffffff", fg: "#90243b", accent: "#fde2b9" },
+  sentence: { bg: "#fdecf1", fg: "#c23d64", accent: "#f9cfdb" },
+  order: { bg: "#eaf1fb", fg: "#2f5fa8", accent: "#d3e1f5" },
+  grammar: { bg: "#f1eafb", fg: "#6c3fa8", accent: "#e1d4f5" },
 };
 
 interface VocabCardProps {
@@ -25,18 +26,18 @@ function ComingSoonCard({
 }) {
   return (
     <View
-      className="border border-zinc-100 px-5 py-4 opacity-60"
+      className="rounded-3xl px-5 py-4 opacity-70"
       style={{ backgroundColor: colors.bg }}
     >
       <View className="flex-row items-center justify-between">
         <Text className="text-base font-bold" style={{ color: colors.fg }}>
           {title}
         </Text>
-        <View className="border border-zinc-300 px-2 py-0.5">
-          <Text className="text-[10px] font-bold text-zinc-500">준비 중</Text>
+        <View className="rounded-full bg-white/70 px-2.5 py-0.5">
+          <Text className="text-[10px] font-bold text-ink-soft">준비 중</Text>
         </View>
       </View>
-      <Text className="mt-1 text-xs text-zinc-500">{subtitle}</Text>
+      <Text className="mt-1 text-xs text-ink-soft">{subtitle}</Text>
     </View>
   );
 }
@@ -53,18 +54,22 @@ export function VocabStudyCard({ totalSets, testedSetCount }: VocabCardProps) {
         backgroundColor: colors.bg,
         opacity: pressed ? 0.85 : 1,
       })}
-      className="border border-zinc-100 px-5 py-4"
+      className="rounded-3xl border border-line px-5 py-5 shadow-sm shadow-brand/20"
     >
       <View className="flex-row items-center justify-between">
         <Text className="text-base font-bold" style={{ color: colors.fg }}>
           단어 학습
         </Text>
         <View className="flex-row items-center gap-1">
-          <Text className="text-xs font-bold text-zinc-500">{statusText}</Text>
-          <Ionicons name="chevron-forward" size={16} color="#71717a" />
+          <View className="rounded-full px-2.5 py-0.5" style={{ backgroundColor: colors.accent }}>
+            <Text className="text-xs font-bold" style={{ color: colors.fg }}>
+              {statusText}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color="#90243b" />
         </View>
       </View>
-      <Text className="mt-1 text-xs text-zinc-500">단어를 암기하고 테스트해요</Text>
+      <Text className="mt-1 text-xs text-ink-soft">단어를 암기하고 테스트해요</Text>
     </Pressable>
   );
 }
