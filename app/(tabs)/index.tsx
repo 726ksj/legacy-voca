@@ -2,17 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { fetchVocabOverview } from "../../lib/vocab";
 import { StudyCardList } from "../../components/StudyCards";
-import { brandGradient, colors } from "../../lib/theme";
-import { useStatusBar } from "../../lib/useStatusBar";
+import { colors } from "../../lib/theme";
+import ScreenHeader from "../../components/ScreenHeader";
 
 export default function HomeScreen() {
-  useStatusBar("light");
-  const insets = useSafeAreaInsets();
   const [name, setName] = useState<string | null>(null);
   const [totalSets, setTotalSets] = useState(0);
   const [testedSetCount, setTestedSetCount] = useState(0);
@@ -52,35 +48,29 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-blush">
-        <ActivityIndicator color={colors.brand} />
+      <View className="flex-1 bg-blush">
+        <ScreenHeader title="LEGACY M" />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={colors.brand} />
+        </View>
       </View>
     );
   }
 
   return (
     <View className="flex-1 bg-blush">
-      <LinearGradient
-        colors={brandGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          paddingTop: insets.top + 20,
-          paddingBottom: 32,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-        }}
-      >
-        <View className="relative flex-row items-center justify-center px-6">
-          <Text className="text-xl font-extrabold tracking-wide text-white">LEGACY M</Text>
+      <ScreenHeader
+        title="LEGACY M"
+        right={
           <Pressable
             onPress={() => Alert.alert("알림", "새 알림이 없습니다.")}
-            className="absolute right-6"
+            hitSlop={8}
+            className="h-9 w-9 items-center justify-center rounded-full bg-white/25"
           >
-            <Ionicons name="notifications-outline" size={22} color="white" />
+            <Ionicons name="notifications-outline" size={20} color="white" />
           </Pressable>
-        </View>
-      </LinearGradient>
+        }
+      />
 
       <ScrollView
         contentContainerClassName="px-6 pb-10"

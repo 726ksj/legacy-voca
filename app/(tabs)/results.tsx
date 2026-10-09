@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { colors } from "../../lib/theme";
-import { useStatusBar } from "../../lib/useStatusBar";
+import ScreenHeader from "../../components/ScreenHeader";
+import EmptyState from "../../components/EmptyState";
 
 interface TestResult {
   id: string;
@@ -23,8 +23,6 @@ function formatDate(iso: string) {
 }
 
 export default function ResultsScreen() {
-  useStatusBar("dark");
-  const insets = useSafeAreaInsets();
   const [results, setResults] = useState<TestResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,28 +57,33 @@ export default function ResultsScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-blush">
-        <ActivityIndicator color={colors.brand} />
+      <View className="flex-1 bg-blush">
+        <ScreenHeader title="학습 결과" />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={colors.brand} />
+        </View>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-blush" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-blush">
+      <ScreenHeader title="학습 결과" />
       <ScrollView
         contentContainerClassName="px-6 pb-10"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
         }
       >
-        <Text className="mt-2 text-2xl font-extrabold text-ink">학습 결과</Text>
-        <Text className="mt-1 text-sm text-ink-soft">단어 테스트 기록이에요</Text>
+        <Text className="mt-6 text-sm text-ink-soft">단어 테스트 기록이에요</Text>
 
-        <View className="mt-6 gap-3">
+        <View className="mt-4 gap-3">
           {results.length === 0 && (
-            <View className="items-center py-20">
-              <Text className="text-sm text-ink-soft">아직 테스트 기록이 없어요</Text>
-            </View>
+            <EmptyState
+              icon="stats-chart-outline"
+              title="아직 테스트 기록이 없어요"
+              description="단어 테스트를 마치면 점수가 여기에 쌓여요"
+            />
           )}
 
           {results.map((r) => (

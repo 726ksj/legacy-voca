@@ -13,11 +13,11 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { brandGradient, colors } from "../lib/theme";
-import { useStatusBar } from "../lib/useStatusBar";
 
 const EMAIL_DOMAIN = "legacyedu.local";
 const SAVED_USERNAME_KEY = "legacy-voca:saved-username";
@@ -47,7 +47,6 @@ function FormInput({
 }
 
 export default function LoginScreen() {
-  useStatusBar("light");
   const insets = useSafeAreaInsets();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -100,6 +99,7 @@ export default function LoginScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-blush"
     >
+      <StatusBar style="light" />
       <ScrollView
         contentContainerClassName="flex-grow"
         keyboardShouldPersistTaps="handled"

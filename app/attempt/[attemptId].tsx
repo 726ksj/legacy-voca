@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
-import { brandGradient, colors, stackHeaderOptions } from "../../lib/theme";
+import { brandGradient, colors } from "../../lib/theme";
+import ScreenHeader from "../../components/ScreenHeader";
 import {
   answerQuestion,
   friendlyTestError,
@@ -15,7 +16,6 @@ import {
   type AttemptQuestion,
   type TestStatus,
 } from "../../lib/test";
-import { useStatusBar } from "../../lib/useStatusBar";
 
 const firstUnanswered = (attempt: Attempt) =>
   attempt.questions.find((question) => question.selected_index === null)?.position ?? null;
@@ -181,7 +181,6 @@ function ResultView({ attempt }: { attempt: Attempt }) {
 }
 
 export default function AttemptScreen() {
-  useStatusBar("dark");
   const { attemptId } = useLocalSearchParams<{ attemptId: string }>();
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [position, setPosition] = useState<number | null>(null);
@@ -246,7 +245,19 @@ export default function AttemptScreen() {
 
   return (
     <View className="flex-1 bg-blush">
-      <Stack.Screen options={{ ...stackHeaderOptions, title }} />
+      <ScreenHeader
+        title={title}
+        back
+        right={
+          attempt && !showResult ? (
+            <View className="rounded-full bg-white/25 px-2.5 py-1">
+              <Text className="text-xs font-bold text-white">
+                {question?.position ?? attempt.total_count} / {attempt.total_count}
+              </Text>
+            </View>
+          ) : undefined
+        }
+      />
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
@@ -263,12 +274,7 @@ export default function AttemptScreen() {
       ) : (
         question && (
           <ScrollView contentContainerClassName="px-6 py-6 gap-6">
-            <View className="gap-2">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs font-bold text-ink-soft">
-                  {question.position} / {attempt.total_count}
-                </Text>
-              </View>
+            <View>
               <View className="h-2 rounded-full bg-white">
                 <View
                   className="h-2 rounded-full bg-brand"

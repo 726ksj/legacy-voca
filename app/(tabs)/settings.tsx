@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { colors } from "../../lib/theme";
-import { useStatusBar } from "../../lib/useStatusBar";
+import ScreenHeader from "../../components/ScreenHeader";
 
 export default function SettingsScreen() {
-  useStatusBar("dark");
-  const insets = useSafeAreaInsets();
   const [name, setName] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,17 +49,19 @@ export default function SettingsScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-blush">
-        <ActivityIndicator color={colors.brand} />
+      <View className="flex-1 bg-blush">
+        <ScreenHeader title="설정" />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={colors.brand} />
+        </View>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-blush" style={{ paddingTop: insets.top }}>
-      <View className="px-6 pt-2">
-        <Text className="text-2xl font-extrabold text-ink">설정</Text>
-
+    <View className="flex-1 bg-blush">
+      <ScreenHeader title="설정" />
+      <View className="px-6">
         <View className="mt-6 rounded-3xl border border-line bg-white px-5 py-5 shadow-sm shadow-brand/20">
           <Text className="text-base font-bold text-ink">{name ?? "회원"}</Text>
           {username && <Text className="mt-1 text-sm text-ink-soft">@{username}</Text>}

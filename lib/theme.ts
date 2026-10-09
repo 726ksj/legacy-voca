@@ -14,13 +14,3 @@ export const colors = {
 
 // 로고 아이콘의 분홍 그라데이션.
 export const brandGradient = ["#eb89a8", "#df6e92"] as const;
-
-// 스택 화면(테스트 등)의 네비게이션 헤더 공통 옵션.
-export const stackHeaderOptions = {
-  headerShown: true,
-  headerBackTitle: "뒤로",
-  headerStyle: { backgroundColor: colors.blush },
-  headerTintColor: colors.berry,
-  headerTitleStyle: { color: colors.ink, fontWeight: "700" as const },
-  headerShadowVisible: false,
-};

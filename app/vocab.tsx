@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
-import { router, Stack } from "expo-router";
+import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { fetchVocabOverview, type VocabGroup } from "../lib/vocab";
-import { colors, stackHeaderOptions } from "../lib/theme";
-import { useStatusBar } from "../lib/useStatusBar";
+import { colors } from "../lib/theme";
+import ScreenHeader from "../components/ScreenHeader";
+import EmptyState from "../components/EmptyState";
 
 export default function VocabScreen() {
-  useStatusBar("dark");
   const [groups, setGroups] = useState<VocabGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,7 +44,7 @@ export default function VocabScreen() {
 
   return (
     <View className="flex-1 bg-blush">
-      <Stack.Screen options={{ ...stackHeaderOptions, title: "단어 학습" }} />
+      <ScreenHeader title="단어 학습" back />
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
@@ -65,9 +65,11 @@ export default function VocabScreen() {
           )}
 
           {!error && groups.length === 0 && (
-            <View className="items-center py-20">
-              <Text className="text-sm text-ink-soft">아직 배정된 단어장이 없습니다.</Text>
-            </View>
+            <EmptyState
+              icon="book-outline"
+              title="아직 배정된 단어장이 없어요"
+              description="강사님이 단어장을 배정하면 여기에 나타나요"
+            />
           )}
 
           {groups.map((group) => (

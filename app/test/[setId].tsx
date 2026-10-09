@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
-import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
-import { brandGradient, colors, stackHeaderOptions } from "../../lib/theme";
+import { brandGradient, colors } from "../../lib/theme";
+import ScreenHeader from "../../components/ScreenHeader";
 import {
   friendlyTestError,
   getTestStatus,
@@ -12,7 +13,6 @@ import {
   type TestRound,
   type TestStatus,
 } from "../../lib/test";
-import { useStatusBar } from "../../lib/useStatusBar";
 
 function RoundCard({
   roundNo,
@@ -58,7 +58,6 @@ function RoundCard({
 }
 
 export default function TestOverviewScreen() {
-  useStatusBar("dark");
   const { setId } = useLocalSearchParams<{ setId: string }>();
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<TestStatus | null>(null);
@@ -136,7 +135,7 @@ export default function TestOverviewScreen() {
 
   return (
     <View className="flex-1 bg-blush">
-      <Stack.Screen options={{ ...stackHeaderOptions, title: "단어 테스트" }} />
+      <ScreenHeader title="단어 테스트" back />
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
